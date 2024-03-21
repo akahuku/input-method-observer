@@ -1,0 +1,6 @@
+#!/bin/bash
+
+SELFPATH="$(dirname "$(readlink -f "$0")")"
+
+exec -a $(basename "$0") node --preserve-symlinks "$SELFPATH/../observer/input-method-observer-client.js" "$@"
+

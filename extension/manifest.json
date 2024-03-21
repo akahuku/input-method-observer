@@ -1,0 +1,51 @@
+{
+	"manifest_version": 3,
+	"name": "Input Method Observer",
+	"short_name": "InputMethodObserver",
+	"version": "0.1.0",
+	"version_name": "0.1.0",
+	"description": "インプットメソッドの入力状態を表示します",
+	"minimum_chrome_version": "116",
+	"permissions": ["alarms", "storage", "tabs"],
+	"background": {
+		"service_worker": "background.js",
+		"type": "module"
+	},
+	"content_scripts": [
+		{
+			"matches": ["http://*/*", "https://*/*"],
+			"js": ["frontend/content.js"],
+			"run_at": "document_start",
+			"all_frames": true
+		}
+	],
+	"icons": {
+		"16": "icon/icon016.png",
+		"48": "icon/icon048.png",
+		"128": "icon/icon128.png"
+	},
+	"action": {
+		"default_popup": "popup.html",
+		"default_icon": {
+			"16": "icon/icon016-gray.png",
+			"48": "icon/icon048-gray.png",
+			"128": "icon/icon128-gray.png"
+		}
+	},
+	"web_accessible_resources": [
+		{
+			"resources": [
+				"LICENSE-2.0.md",
+				"NOTICE.md",
+				"lib/*",
+				"voice/*"
+			],
+			"matches": ["http://*/*", "https://*/*"]
+		}
+	],
+	"options_ui": {
+		"page": "options.html",
+		"open_in_tab": true
+	},
+	"homepage_url": "https://appsweets.net/input-method-observer/"
+}

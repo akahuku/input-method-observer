@@ -1,0 +1,14 @@
+[Unit]
+Description=Input Method observer service
+After=network.target
+Requires=input-method-observer.socket
+
+[Service]
+; note: install-script replaces "IMO_ROOT" to actual path
+ExecStart=$IMO_ROOT/bin/input-method-observer --mode websocket
+Restart=no
+StandardOutput=journal
+StandardError=journal
+
+[Install]
+WantedBy=multi-user.target

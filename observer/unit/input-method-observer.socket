@@ -1,0 +1,9 @@
+[Unit]
+Description=Input Method observer socket
+
+[Socket]
+ListenStream=6631
+Accept=false
+
+[Install]
+WantedBy=sockets.target

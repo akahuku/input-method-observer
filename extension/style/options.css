@@ -1,0 +1,281 @@
+:root {
+	--accent-color:#bfe681;
+	--base-color-light:#fff0ee;
+	--base-color-medium:#f7ded0;
+	--base-color-dark:#666;
+}
+
+body {
+	margin:0;
+	background-color:#808080;
+	color:var(--base-color-dark);
+}
+
+h1 {
+	margin:0 0 .5em 0;
+	padding:0 0 .5em 0;
+	border-bottom:1px solid silver;
+	line-height:1;
+	white-space:nowrap;
+	font-size:large;
+	font-weight:bold;
+}
+
+h1 img {
+	margin:0 8px 0 0;
+	vertical-align:middle;
+}
+
+h2 {
+	margin:0 0 1em 0;
+	padding:0;
+	line-height:1;
+	white-space:nowrap;
+	font-size:large;
+	font-weight:bold;
+}
+
+code {
+	margin:0 2px 0 2px;
+	padding:1px 4px 1px 4px;
+	background-color:#fff;
+	color:#333;
+	border-radius:4px;
+}
+
+input[type="text"]:focus,
+input[type="number"]:focus,
+textarea:focus {
+	outline:4px solid var(--accent-color);
+}
+
+label {
+	cursor:pointer;
+}
+
+a { text-decoration:none; color:#46a; }
+a:link { color:#46a; }
+a:visited { color:#888; }
+a:hover { color:#d44; }
+a:active { color:#46a; }
+
+a.save {
+	display:block;
+	margin:0 8px 16px 8px;
+	padding:12px;
+	background-color:#67961e;
+	color:#fff;
+	border-bottom: 5px solid #336633;
+	border-radius:10000px;
+	font-size:medium;
+	text-align:center;
+	text-decoration:none;
+	text-shadow:0 1px #333;
+}
+
+a.save:hover {
+	background-color:#87b63e;
+}
+
+a.save img {
+	margin:0 2px 0 0;
+	height:1.5em;
+	vertical-align:middle;
+}
+
+a.reset {
+	display:block;
+	margin:0 8px 16px 8px;
+	padding:4px;
+	background-color:#fff;
+	color:#666;
+	border:1px solid #67961e;
+	border-radius:10000px;
+	font-size:medium;
+	text-align:center;
+	text-decoration:none;
+}
+
+a.reset:hover {
+	background-color:#87b63e;
+	color:#fff;
+}
+
+.main-container {
+	display:flex;
+	width:100%;
+}
+
+.side {
+	padding:16px;
+	background-color:#fff;
+	border-right:1px solid #f0f0f0;
+}
+
+.side-content {
+	position:sticky;
+	height:calc(100vh - 32px);
+	top:16px;
+	display:flex;
+	flex-direction:column;
+}
+
+.side-content > :nth-child(2) {
+	flex-grow:1;
+}
+
+.main {
+	padding:16px;
+	flex-grow:1;
+	background-color:var(--base-color-light);
+}
+
+.main ul {
+	max-width:768px;
+	margin:0 0 4em 2em;
+	padding:0;
+	border:1px solid #e0e0e0;
+	border-radius:8px;
+	background-color:#fff;
+	box-shadow:0px 3px 10px 2px rgba(0,0,0,.2);
+}
+
+.main li {
+	display:flex;
+	list-style:none;
+	margin:0;
+	padding:8px;
+	border-bottom:1px solid #e0e0e0;
+}
+
+.main li > div:first-child {
+	flex-grow:1;
+}
+
+.main li:last-child {
+	border:none;
+}
+
+.main li h3 {
+	margin:0 0 1em 0;
+	padding:0;
+	font-size:small;
+	font-weight:normal;
+	white-space:nowrap;
+}
+
+.main li h3:last-child {
+	margin-bottom:0;
+}
+
+.main .option-desc {
+	margin:0 4em 0 1em;
+	padding:1em;
+	background-color:var(--accent-color);
+	color:#333;
+	border-radius:4px;
+	border-bottom:1px solid silver;
+	font-size:x-small;
+	text-align:justify;
+	text-justify:inter-word;
+}
+
+.main .option-desc p {
+	margin:0 0 1em 0;
+}
+
+.main .option-desc p:last-child {
+	margin:0;
+}
+
+.main input {
+	vertical-align:middle;
+}
+
+.main input[type="text"],
+.main input[type="number"] {
+	box-sizing:border-box;
+	width:200px;
+	margin:0;
+	padding:4px;
+	border:1px solid #808080;
+	border-radius:2px;
+	background-color:#fff;
+	color:#333;
+}
+
+.main textarea {
+	box-sizing:border-box;
+	width:200px;
+	height:200px;
+	resize:vertical;
+	margin:0;
+	padding:4px;
+	border:1px solid #808080;
+	border-radius:2px;
+	background-color:#fff;
+	color:#333;
+}
+
+.main textarea.line {
+	height:calc(8em + 10px);
+}
+
+.main output {
+	margin:0 4px 0 0;
+}
+
+.main table {
+	margin:0;
+	border-collapse:collapse;
+}
+
+.main td {
+	padding:2px;
+	vertical-align:top;
+	text-align:left;
+	border:none;
+	white-space:nowrap;
+}
+
+.main td:last-child {
+	padding-right:0;
+}
+
+.main img.play {
+	height:1.5em;
+	vertical-align:middle;
+}
+
+#im-tester {
+	margin:0 0 2px 0;
+	box-sizing:border-box;
+	width:100%;
+	border:1px solid silver;
+	border-radius:2px;
+	background-color:#fff;
+	color:#333;
+}
+
+#im-log {
+	box-sizing:border-box;
+	width:100%;
+	height:300px;
+	overflow-y:scroll;
+	border:1px solid silver;
+	padding:4px;
+	border-radius:2px;
+	background-color:var(--base-color-medium);
+}
+
+#im-log > div {
+	margin:4px;
+	padding:4px;
+	background-color:#fff;
+	color:var(--base-color-dark);
+	white-space:pre-wrap;
+	font-family:monospace;
+	font-size:x-small;
+	border-radius:4px;
+	border-bottom:1px solid silver;
+}

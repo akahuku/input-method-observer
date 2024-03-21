@@ -1,0 +1,9 @@
+{
+  "name": "net.appsweets.inputmethodobserver",
+  "description": "Retrieve input method state and notify to browser",
+  "path": "/home/akahuku/devel/chrome-extension/imstate/host/input-method-observer",
+  "type": "stdio",
+  "allowed_extensions": [
+    "chrome-extension://oflekcmelbeioiifhaonaehallibhkpn/"
+  ]
+}

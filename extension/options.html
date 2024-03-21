@@ -1,0 +1,172 @@
+<!doctype html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>Input Method Observer の設定</title>
+		<link rel="stylesheet" type="text/css" href="style/options.css">
+		<link rel="stylesheet" type="text/css" href="style/checkbox2.css">
+		<style type="text/css" id="dyn-style"></style>
+		<script type="module" src="script/options.js"></script>
+	</head>
+	<body>
+		<div class="main-container">
+			<div class="side">
+				<div class="side-content">
+					<h1><img src="icon/icon048.png">設定</h1>
+					<div>
+						<span id="product"></span>/<span id="version"></span>
+						<ul>
+							<li><a href="LICENSE-2.0.md">ライセンス (Apache 2.0)</a></li>
+							<li><a href="NOTICE.md">注意書き</a></li>
+							<li><a href="https://github.com/akahuku/input-method-observer">GitHub でソースを見る</a></li>
+						</ul>
+					</div>
+					<div>
+						<a class="save" href="#save"><img src="image/check-circle-svgrepo-com.svg"><span id="save-text">保存</span></a>
+						<a class="reset" href="#reset"><span id="reset-text">設定をリセット</span></a>
+					</div>
+					<div id="im-log-container">
+						<input type="text" id="im-tester" placeholder="ここに入力できます">
+						<div id="im-log">
+							<div>上のテキストボックスにフォーカスを当てて
+インプットメソッドを切り替えたり、入力状態を
+変更してみてください。
+
+あなたがお使いのインプットメソッドが返す情報が
+ここに反映されます。</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="main">
+				<h2>全体の設定</h2>
+				<ul>
+					<li>
+						<div><h3><label for="enable">この拡張の動作を有効にする</label></h3></div>
+						<div><input type="checkbox" class="toggle" id="enable"></div>
+					</li>
+					<li>
+						<div>
+							<h3><label for="port">オブザーバーとの接続ポート</label></h3>
+							<div class="option-desc">
+								<p>この拡張は、ローカルで動くオブザーバースクリプトを必要とします。オブザーバーは systemd によってオンデマンドに実行されるユニットとして定義されており、インプットメソッドとこの拡張とのやりとりを仲介します。</p>
+								<p><code>~/.config/systemd/user/input-method-observer.socket</code>に記述されているポートをここにも設定してください。デフォルトは6631です。</p>
+							</div>
+						</div>
+						<div><input type="number" id="port" min="0" max="65535"></div>
+					</li>
+					<li>
+						<div>
+							<h3><label for="input-types">対象のINPUT要素のタイプ</label></h3>
+							<div class="option-desc">
+								<p>INPUT要素のうち、どのタイプを状態通知の対象とするかを指定します。タイプとして有効なキーワードは MDN の<a href="https://developer.mozilla.org/ja/docs/Web/HTML/Element/input#input_%E3%81%AE%E5%9E%8B">リファレンス</a>を参照してください。</p>
+								<p>1行に1項目ずつ記述してください。</p>
+							</div>
+						</div>
+						<div><textarea id="input-types"></textarea></div>
+					</li>
+				</ul>
+
+				<h2>入力中の要素のスタイルを変える</h2>
+				<ul id="style-options">
+					<li>
+						<div><h3><label for="enable-style">入力中の要素のスタイルを変える</label></h3></div>
+						<div><input type="checkbox" class="toggle" id="enable-style"></div>
+					</li>
+					<li>
+						<div>
+							<h3><label for="style/background-color">背景色</label></h3>
+						</div>
+						<div><output for="style/background-color"></output><input type="color" id="style/background-color"></div>
+					</li>
+					<li>
+						<div>
+							<h3><label for="style/color">文字色</label></h3>
+						</div>
+						<div><output for="style/color"></output><input type="color" id="style/color"></div>
+					</li>
+					<li>
+						<div>
+							<h3><label for="colored-states">スタイルを変える対象となる入力状態</label></h3>
+							<div class="option-desc">
+								<p>入力中の要素のスタイルを変更する対象としてどのインプットメソッドの入力状態を割り当てるかを指定します。</p>
+								<p>入力状態は左のペインで確認できます。返される状態のうちの <code>longState</code> プロパティが判定に使用されます。</p>
+								<p>1行に1項目ずつ記述してください。</p>
+							</div>
+						</div>
+						<div><textarea id="colored-states"></textarea></div>
+					</li>
+				</ul>
+
+				<h2>入力状態を読み上げる</h2>
+				<ul>
+					<li>
+						<div><h3><label for="enable-speech">入力状態を読み上げる</label></h3></div>
+						<div><input type="checkbox" class="toggle" id="enable-speech"></div>
+					</li>
+					<li>
+						<div><h3><label for="volume">音量</label></h3></div>
+						<div><output for="volume"></output><input type="range" id="volume" min="0" max="1" step="0.1"></div>
+					</li>
+					<li>
+						<div><h3><label for="speech-interval-secs">読み上げを省略する待機秒数</label></h3></div>
+						<div><input type="number" id="speech-interval-secs" min="0" max="60"></div>
+					</li>
+					<li>
+						<div>
+							<h3>音声の割り当て</h3>
+							<div class="option-desc">
+								<p>発声の種別ごとにどのインプットメソッドの入力状態を割り当てるかを指定します。</p>
+								<p>入力状態は左のペインで確認できます。返される状態のうちの <code>longState</code> プロパティが判定に使用されます。</p>
+								<p>1行に1項目ずつ記述してください。</p>
+							</div>
+						</div>
+						<div>
+							<table>
+								<tr>
+									<td><label for="lines/direct">「直接入力」</label><a href="#play"><img class="play" src="image/play-button-svgrepo-com.svg"></a></td>
+									<td><textarea id="lines/direct"></textarea></td>
+								</tr>
+								<tr>
+									<td><label for="lines/alnum">「英数入力」</label><a href="#play"><img class="play" src="image/play-button-svgrepo-com.svg"></a></td>
+									<td><textarea id="lines/alnum"></textarea></td>
+								</tr>
+								<tr>
+									<td><label for="lines/alnum-wide">「全角英数入力」</label><a href="#play"><img class="play" src="image/play-button-svgrepo-com.svg"></a></td>
+									<td><textarea id="lines/alnum-wide"></textarea></td>
+								</tr>
+								<tr>
+									<td><label for="lines/hiragana">「ひらがな入力」</label><a href="#play"><img class="play" src="image/play-button-svgrepo-com.svg"></a></td>
+									<td><textarea id="lines/hiragana"></textarea></td>
+								</tr>
+								<tr>
+									<td><label for="lines/katakana">「カタカナ入力」</label><a href="#play"><img class="play" src="image/play-button-svgrepo-com.svg"></a></td>
+									<td><textarea id="lines/katakana"></textarea></td>
+								</tr>
+								<tr>
+									<td><label for="lines/katakana-narrow">「半角カタカナ入力」</label><a href="#play"><img class="play" src="image/play-button-svgrepo-com.svg"></a></td>
+									<td><textarea id="lines/katakana-narrow"></textarea></td>
+								</tr>
+							</table>
+						</div>
+					</li>
+				</ul>
+
+				<h2>入力状態を表示する</h2>
+				<ul id="popup-options">
+					<li>
+						<div><h3><label for="enable-popup">入力状態を表示する</label></h3></div>
+						<div><input type="checkbox" class="toggle" id="enable-popup"></div>
+					</li>
+					<li>
+						<div>
+							<h3><label for="style/border-color">枠の色</label></h3>
+						</div>
+						<div><output for="style/border-color"></output><input type="color" id="style/border-color"></div>
+					</li>
+				</ul>
+			</div>
+		</div>
+	</body>
+</html>
+

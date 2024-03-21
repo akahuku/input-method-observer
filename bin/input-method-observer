@@ -1,0 +1,18 @@
+#!/bin/bash
+
+SELFPATH="$(dirname "$(readlink -f "$0")")"
+
+if ! type node >/dev/null 2>&1; then
+	if [ -s "$HOME/.nvm/nvm.sh" ]; then
+		source "$HOME/.nvm/nvm.sh"
+		echo "NVM initialized"
+	fi
+fi
+
+if ! type node >/dev/null 2>&1; then
+	echo "node not found"
+	exit 1
+fi
+
+echo "starting input method observer..."
+exec -a $(basename "$0") node --preserve-symlinks "$SELFPATH/../observer/input-method-observer.js" "$@"

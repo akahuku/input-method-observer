@@ -1,0 +1,140 @@
+<!doctype html>
+<!--
+	Input Method Observer
+
+	@author akahuku@gmail.com
+-->
+<html>
+	<head>
+		<meta charset="UTF-8">
+		<title>Popup for Input Method Observer</title>
+		<style>
+body {
+	margin:0;
+	padding:0;
+	background-color:#fff0dd;
+	color:#92523f;
+	font-size:small;
+}
+
+h1 {
+	margin:0 0 8px 0;
+	padding:8px;
+	border-bottom:1px solid #ccc;
+	background-color:#fff;
+	color:#333;
+	line-height:1;
+	font-size:100%;
+	font-weight:normal;
+	white-space:nowrap;
+}
+
+h1 img {
+	margin:0 8px 0 0;
+	vertical-align:middle;
+	width:32px;
+	height:32px;
+}
+
+fieldset {
+	margin:0.5em;
+	padding:8px;
+	border:1px solid #bbb;
+	border-radius:3px;
+}
+
+legend {
+	font-size:x-small;
+	color:#666;
+}
+
+a { text-decoration:none; color:#46a; }
+a:link { color:#46a; }
+a:visited { color:#888; }
+a:hover { color:#d44; }
+a:active { color:#46a; }
+
+.hidden {
+	display:none !important;
+}
+
+.notvisible {
+	visibility:hidden !important;
+}
+
+.main-container {
+	padding:16px;
+}
+
+.main-switch-container {
+	margin:0 0 16px 0;
+	text-align:center;
+}
+
+.options-container {
+	display:flex;
+	justify-content:flex-end;
+	margin:0;
+	font-size:x-small;
+}
+
+.options-container input[type="checkbox"] {
+	vertical-align:middle;
+	margin:0 4px 0 0;
+}
+
+.options-container label {
+	display:block;
+	margin:0 0 4px 0;
+	cursor:pointer;
+}
+
+.options-container .right {
+	text-align:right;
+}
+
+.error-container {
+	padding:8px;
+	text-align:justify;
+}
+
+.bottom-container {
+	margin:.5em 0 0 0;
+	padding:.5em 4px 4px 4px;
+	border-top:1px solid #ccc;
+	font-size:x-small;
+	text-align:right;
+	line-height:1;
+	white-space:nowrap;
+}
+		</style>
+		<link rel="stylesheet" href="style/checkbox.css" media="all">
+		<script type="module" src="script/popup.js"></script>
+	</head>
+	<body>
+		<h1><img id="main-icon" src="icon/icon048-gray.png">Input Method Observer</h1>
+
+		<div id="main-container" class="main-container hidden">
+			<div class="main-switch-container">
+				<input type="checkbox" id="enable" class="main" data-key="enable">
+				<label class="main" for="enable"><span></span>入力状態を通知する</label>
+			</div>
+
+			<div class="options-container">
+				<div>
+					<label><input type="checkbox" id="enable-style" data-key="enableStyle">入力中の要素の色を変える</label>
+					<label><input type="checkbox" id="enable-speech" data-key="enableSpeech">入力状態をしゃべる</label>
+					<label><input type="checkbox" id="enable-popup" data-key="enablePopup">入力状態をポップアップする</label>
+					<div class="right"><a id="configurator" href="#">詳細な設定...</a></div>
+				</div>
+			</div>
+		</div>
+
+		<div id="error-container" class="error-container hidden">
+			<p>準備がまだ整っていません。</p>
+			<p>少し待ってから再度開いてみてください。</p>
+		</div>
+
+		<div class="bottom-container"><span id="product"></span>/<span id="version"></span></div>
+	</body>
+</html>

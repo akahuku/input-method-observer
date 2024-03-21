@@ -1,0 +1,17 @@
+{
+  "name": "InputMethodObserver",
+  "version": "0.1.0",
+  "description": "a browser extension to display input method state",
+  "type": "module",
+  "scripts": {
+    "install": "bin/install-observer",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "akahuku@gmail.com",
+  "license": "Apache-2.0",
+  "dependencies": {
+    "dbus-next": "github:dbusjs/node-dbus-next",
+    "usocket": "^1.0.1",
+    "ws": "^8.16.0"
+  }
+}

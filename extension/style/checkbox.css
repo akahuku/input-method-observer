@@ -1,0 +1,101 @@
+/*
+ * @see https://codepen.io/north-of-rapture/pen/rWqega
+ */
+
+:root {
+	--checkbox-main-color:#d7795d;
+	--checkbox-main-hover-color:#db8e7b;
+}
+
+label.main {
+	display:inline-block;
+	background-color:#fff;
+	color:var(--checkbox-main-color);
+	cursor:pointer;
+	position:relative;
+	padding:12px 16px 12px 16px;
+	border:2px solid var(--checkbox-main-color);
+	border-radius:10000px;
+	white-space:nowrap;
+}
+label.main span {
+	display:inline-block;
+	position:relative;
+	background-color:transparent;
+	width:25px;
+	height:25px;
+	transform-origin:center;
+	border:2px solid var(--checkbox-main-color);
+	border-radius:50%;
+	vertical-align:middle;
+	margin-right:10px;
+}
+label.main span:before {
+	content:"";
+	width:0px;
+	height:2px;
+	border-radius:2px;
+	background:var(--checkbox-main-color);
+	position:absolute;
+	transform:rotate(45deg);
+	top:13px;
+	left:9px;
+	transform-origin:0% 0%;
+}
+label.main span:after {
+	content:"";
+	width:0;
+	height:2px;
+	border-radius:2px;
+	background:var(--checkbox-main-color);
+	position:absolute;
+	transform:rotate(305deg);
+	top:16px;
+	left:10px;
+	transform-origin:0% 0%;
+}
+label.main:hover span:before {
+	width:5px;
+}
+label.main:hover span:after {
+	width:10px;
+}
+
+input[type=checkbox].main {
+	display:none;
+}
+input[type=checkbox].main:checked + label.main {
+	background-color:var(--checkbox-main-color);
+	color:#fff;
+}
+input[type=checkbox].main:checked + label.main:hover {
+	background-color:var(--checkbox-main-hover-color);
+	border-color:var(--checkbox-main-hover-color);
+}
+input[type=checkbox].main:checked + label.main span {
+	background-color:#fff;
+	transform:scale(1.25);
+}
+input[type=checkbox].main:checked + label.main:hover span {
+	border-color:var(--checkbox-main-hover-color);
+}
+input[type=checkbox].main:checked + label.main span:after {
+	width:10px;
+	background:var(--checkbox-main-color);
+}
+input[type=checkbox].main:checked + label.main span:before {
+	width:5px;
+	background:var(--checkbox-main-color);
+}
+input[type=checkbox].main:checked + label.main:hover span {
+	background-color:#fff;
+	transform:scale(1.25);
+}
+input[type=checkbox].main:checked + label.main:hover span:after {
+	width:10px;
+	background:var(--checkbox-main-color);
+}
+input[type=checkbox].main:checked + label.main:hover span:before {
+	width:5px;
+	background:var(--checkbox-main-color);
+}
