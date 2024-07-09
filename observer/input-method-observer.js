@@ -30,7 +30,7 @@ import * as util from 'node:util';
 import dbus from 'dbus-next';
 import WebSocket, {WebSocketServer} from 'ws';
 
-import {debounce, parseJson, } from './utils.js';
+import {debounce, parseJson} from './utils.js';
 
 /*
 MONITOR DBUS SIGNALS (ibus):
@@ -348,6 +348,59 @@ const processExitDebounced = debounce(exitCode => {
 		process.exit(exitCode);
 	}
 }, 1000 * 30);
+
+function spawn (data, executable, args, options) {
+	return new Promise((resolve, reject) => {
+		const chunks = [];
+		let child;
+
+		try {
+			child = child_process.spawn(executable, args, options);
+		}
+		catch (err) {
+			reject(err);
+			return;
+		}
+
+		if (child.stdout) {
+			child.stdout.on('data', data => {
+				chunks.push(data);
+			});
+		}
+		if (child.stderr) {
+			child.stderr.on('data', data => {
+				console.error(data.toString());
+			});
+		}
+		if (child.stdin) {
+			child.stdin.on('error', err => {
+				/*
+				 * note:
+				 * writing to stdin may cause EPIPE error,
+				 * this seems to be no problem to ignore.
+				 */
+			});
+		}
+
+		child.on('error', err => {
+			child = null;
+			reject(err);
+		});
+		child.on('close', code => {
+			child = null;
+			resolve(Buffer.concat(chunks));
+		});
+
+		if (data && child.stdin) {
+			try {
+				child.stdin.end(data);
+			}
+			catch (err) {
+				reject(err);
+			}
+		}
+	});
+}
 
 function now () {
 	const d = new Date;
@@ -709,7 +762,7 @@ async function outputLog (message) {
 	try {
 		const fileName = nodePath.join(os.tmpdir(), CURRENT_LOG_FILE_NAME);
 		handle = await fs.open(fileName, 'w+');
-		const {bytesWritten} = await handle.write(message.shortState, 0);
+		const {bytesWritten} = await handle.write(`${message.shortState} ${message.keyboard}`, 0);
 		await handle.truncate(bytesWritten);
 	}
 	catch (err) {

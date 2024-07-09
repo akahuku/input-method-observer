@@ -19,7 +19,7 @@
  * limitations under the License.
  */
 
-import {log, $, $qs, $qsa, empty, getReadableSize, debounce} from '../lib/utils.js';
+import {log, $, $qsa} from '../lib/utils.js';
 
 log.config({name: 'imo'});
 
@@ -53,46 +53,60 @@ function handleOptionLinkClick (e) {
 	chrome.runtime.openOptionsPage();
 }
 
+function handleDisconnectClick (e) {
+	e.preventDefault();
+	chrome.runtime.sendMessage({type: 'disconnect'});
+	window.close();
+}
+
 function handleCheckboxClick (e) {
 	const checkbox = e.target.closest('input[type="checkbox"]');
-	if (checkbox) {
-		(async function () {
+	if (!checkbox) return;
+
+	(async function () {
+		try {
+			let internals;
+
+			setCheckboxState(false);
 			try {
-				let internals;
-
-				setCheckboxState(false);
-				try {
-					internals = await chrome.runtime.sendMessage({
-						type: 'updateSettings',
-						settings: {
-							[checkbox.dataset.key]: checkbox.checked
-						}
-					});
-				}
-				finally {
-					setCheckboxState(true);
-				}
-				
-				if (internals) {
-					updateIcon(internals);
-					updateMainContainer(internals);
-
-					if (!internals.connected) {
-						alert([
-							'バックエンドに接続できません。',
-							'',
-							'・systemd のソケットユニットが停止中ではありませんか？',
-							'・バックエンドプログラムが正しくインストールされていますか？',
-							'・ポートの指定は正しいですか？'
-						].join('\n'));
+				internals = await chrome.runtime.sendMessage({
+					type: 'updateSettings',
+					settings: {
+						[checkbox.dataset.key]: checkbox.checked
 					}
+				});
+			}
+			finally {
+				setCheckboxState(true);
+			}
+
+			if (internals) {
+				if (internals.error) {
+					throw internals.error;
+				}
+				updateIcon(internals);
+				updateMainContainer(internals);
+
+				if (!internals.connected) {
+					alert([
+						'バックエンドに接続できません。',
+						'',
+						'・systemd のソケットユニットが停止中ではありませんか？',
+						'・バックエンドプログラムが正しくインストールされていますか？',
+						'・ポートの指定は正しいですか？'
+					].join('\n'));
 				}
 			}
-			catch (err) {
-				log(`popup#handleCheckboxClick: ${err.stack}`);
+			else {
+				alert([
+					'バックグラウンドスクリプトに接続できません。'
+				].join('\n'));
 			}
-		})();
-	}
+		}
+		catch (err) {
+			log(`popup#handleCheckboxClick: ${err.stack}`);
+		}
+	})();
 }
 
 async function handleMessage (message) {
@@ -109,36 +123,41 @@ Promise.all([
 			document.addEventListener('DOMContentLoaded', resolve, {once: true});
 		}
 	})
-]).then(([internals, e]) => {
+]).then(([internals]) => {
 	const manifest = chrome.runtime.getManifest();
 	$('product').textContent = manifest.name;
 	$('version').textContent = manifest.version;
 
-	if (internals.settings) {
-		// update appearance
-		$('main-container').classList.remove('hidden');
-		updateIcon(internals);
-		updateMainContainer(internals);
-
-		// listen config link click
-		$('configurator').addEventListener('click', handleOptionLinkClick);
-
-		// listen checkbox clicks
-		document.body.addEventListener('click', handleCheckboxClick);
-
-		// listen exntension messages
-		chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-			handleMessage(request)
-				.catch(err => {
-					log(`exception ${err.stack}`);
-				})
-				.finally(() => {
-					sendResponse(true);
-				});
-			return true;
-		});
+	if (!internals?.settings) {
+		throw new Error('settings not found');
 	}
-	else {
-		$('error-container').classList.remove('hidden');
-	}
+
+	// update appearance
+	$('main-container').classList.remove('hidden');
+	updateIcon(internals);
+	updateMainContainer(internals);
+
+	// listen config link click
+	$('configurator').addEventListener('click', handleOptionLinkClick);
+
+	// listen disconnect link click
+	$('disconnect').addEventListener('click', handleDisconnectClick);
+
+	// listen checkbox clicks
+	document.body.addEventListener('click', handleCheckboxClick);
+
+	// listen exntension messages
+	chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+		handleMessage(request)
+			.catch(err => {
+				log(`exception ${err.stack}`);
+			})
+			.finally(() => {
+				sendResponse(true);
+			});
+		return true;
+	});
+}).catch(err => {
+	$('error-container').classList.remove('hidden');
+	console.error(err);
 });

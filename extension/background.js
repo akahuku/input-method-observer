@@ -19,39 +19,49 @@
  * limitations under the License.
  */
 
-import {log} from './lib/utils.js';
+import {log as logCore, getErrorDescription, debounce} from './lib/utils.js';
 
-log.config({name: 'imo'});
+logCore.config({name: 'imo'});
 
 /*
  * consts
  */
 
+/** @type {boolean} */
+const LOG_ENABLE = true;
+/** @type {number} */
+const WEBSOCKET_OPENED = 1;
+/** @type {number} */
+const KEEPALIVE_INTERVAL_SECS = 20;
+/** @type {number} */
+const INITIALIZE_DELAY_MSECS = 3000;
 
 /*
  * variables
  */
 
-let p;
+/** @type {WebSocket} */
 let websocket;
+/** @type {boolean} */
+let unexpectedDisconnectionDetected;
+/** @type {number} */
 let keepAliveTimer;
+/** @type {object} */
 let settings;
+/** @type {number} */
 let lastAudioPlayedTime = 0;
+/** @type {Set} */
 const tabIds = new Set;
-const focusedFrame = {};
+/** @type {Function} */
+const log = LOG_ENABLE ? logCore : () => {};
 
 /*
  * functions
  */
 
-function registerInitializer () {
-	return chrome.alarms.clearAll().then(wasCleared => {
-		chrome.alarms.create('initializer', {
-			when: Date.now() + 1000 * 3
-		});
-	});
-}
-
+/**
+ * @returns {object}
+ */
 function getDefaultSettings () {
 	return {
 		enable: true,
@@ -138,14 +148,14 @@ function getDefaultSettings () {
 	};
 }
 
-function loadVars () {
-	if (!p) {
-		p = chrome.storage.local.get(getDefaultSettings()).then(s => {
-			settings = s;
-		});
+async function initApplication () {
+	if (settings === undefined) {
+		const s = await chrome.storage.local.get(getDefaultSettings());
+		settings = s;
 	}
-
-	return p;
+	if (websocket === undefined) {
+		await startConnect();
+	}
 }
 
 function keepAlive () {
@@ -159,14 +169,14 @@ function keepAlive () {
 			clearInterval(keepAliveTimer);
 			keepAliveTimer = undefined;
 		}
-	}, 1000 * 20);
+	}, 1000 * KEEPALIVE_INTERVAL_SECS);
 }
 
 function updateActionIcon () {
 	const extensionTitle = chrome.runtime.getManifest().name;
 	let icon, tooltip;
 
-	if (websocket?.readyState === 1 && settings?.enable) {
+	if (isConnected() && settings?.enable) {
 		icon = {
 			path: {
 				'16': 'icon/icon016.png',
@@ -187,7 +197,7 @@ function updateActionIcon () {
 			}
 		};
 		tooltip = {
-			title: websocket?.readyState === 1 ?
+			title: isConnected() ?
 				`${extensionTitle}\n停止しています` :
 				`${extensionTitle}\nバックエンドに接続していません`
 		};
@@ -199,18 +209,24 @@ function updateActionIcon () {
 	]);
 }
 
+/**
+ * @param {any} message
+ * @returns {Promise<[]>}
+ */
 function broadcastToClientTabs (message) {
 	const broadcastPromises = [];
 	tabIds.forEach(tabId => {
-		log(`sending settings update message to tab #${tabId}`);
 		broadcastPromises.push(chrome.tabs.sendMessage(tabId, message));
 	});
-
+	log(`broadcasting a message to tab #${[...tabIds].join(', #')}...`);
 	return Promise.all(broadcastPromises);
 }
 
+/**
+ * @returns {Promise<boolean>}
+ */
 function startConnect () {
-	if (websocket) return Promise.resolve(websocket.readyState === 1);
+	if (websocket) return Promise.resolve(isConnected());
 
 	return new Promise(resolve => {
 		function handleError (e) {
@@ -218,45 +234,43 @@ function startConnect () {
 				log('websocket#onerror: error occured');
 			}
 			catch (err) {
-				log('websocket#onerror: ' + err.stack);
+				log(`websocket#onerror: ${getErrorDescription(err)}`);
 			}
 		}
 
 		function handleOpen (e) {
 			try {
-				websocket.onmessage = e => {handleMessageAsync(e)};
-				keepAlive();
+				websocket.onmessage = async e => {
+					try {
+						if (e.data === '!') return;
+						await handleInputMethodStateChange(JSON.parse(e.data));
+					}
+					catch (err) {
+						log(`websocket#onmessage: ${getErrorDescription(err)}`);
+					}
+				};
 				log('websocket#onopen: connected');
 
+				keepAlive();
 				updateActionIcon();
 				resolve(true);
 			}
 			catch (err) {
-				log('websocket#onopen: ' + err.stack);
+				log(`websocket#onopen: ${getErrorDescription(err)}`);
 			}
 		}
 
 		function handleClose (e) {
 			try {
 				websocket = undefined;
-				log(`websocket#onclose: disconnected`);
+				log(`websocket#onclose: disconnected. code: ${e.code}, reason: "${e.reason}", wasClean: ${e.wasClean}`);
 
+				unexpectedDisconnectionDetected = !e.wasClean;
 				updateActionIcon();
 				broadcastToClientTabs({type: 'invalidate-settings'});
-				resolve(false);
 			}
 			catch (err) {
-				log('websocket#onclose: ' + err.stack);
-			}
-		}
-
-		async function handleMessageAsync (e) {
-			try {
-				if (e.data === '!') return;
-				await handleInputMethodStateChange(JSON.parse(e.data));
-			}
-			catch (err) {
-				log('websocket#onmessage: ' + err.stack);
+				log(`websocket#onclose: ${getErrorDescription(err)}`);
 			}
 		}
 
@@ -267,10 +281,31 @@ function startConnect () {
 	});
 }
 
+/**
+ * @returns {boolean}
+ */
+function isConnected () {
+	return websocket?.readyState === WEBSOCKET_OPENED;
+}
+
 /*
  * event handlers
  */
 
+const handleInitialize = debounce(async () => {
+	try {
+		log(`enter handleInitialize`);
+
+		await initApplication();
+	}
+	catch (err) {
+		log(`handleInitialize: exception, ${getErrorDescription(err)}`);
+	}
+}, INITIALIZE_DELAY_MSECS);
+
+/**
+ * @param {object} data
+ */
 async function handleInputMethodStateChange (data) {
 	const window = await chrome.windows.getLastFocused();
 	if (!window.focused) {
@@ -284,8 +319,10 @@ async function handleInputMethodStateChange (data) {
 
 	log(`sending data ${JSON.stringify(data)} to ${tabs[0].id}#0 (${tabs[0].url.substring(0, 32)}...)`);
 	try {
-		const result = await chrome.tabs.sendMessage(tabs[0].id, {
-			data: {lastAudioPlayedTime, ...data}
+		await chrome.tabs.sendMessage(tabs[0].id, {
+			connected: isConnected(),
+			settings,
+			data: {...data, lastAudioPlayedTime}
 		});
 	}
 	catch {
@@ -293,6 +330,9 @@ async function handleInputMethodStateChange (data) {
 	}
 }
 
+/**
+ * @param {object} newSettings
+ */
 async function handleUpdateSettings (newSettings) {
 	// port updated: disconnect -> connect
 	if ('port' in newSettings && newSettings.port !== settings.port) {
@@ -310,7 +350,7 @@ async function handleUpdateSettings (newSettings) {
 		}
 	}
 
-	await chrome.storage.local.clear();
+	//await chrome.storage.local.clear();
 	await chrome.storage.local.set(updated);
 	await startConnect();
 	await broadcastToClientTabs({type: 'invalidate-settings'});
@@ -320,27 +360,23 @@ async function handleUpdateSettings (newSettings) {
  * bootstrap
  */
 
+chrome.idle.onStateChanged.addListener(state => {
+	log(`idle state changed: ${state}`);
+	if (state === 'active' && unexpectedDisconnectionDetected) {
+		// this computer might have resumed from suspend?
+		unexpectedDisconnectionDetected = false;
+		startConnect();
+	}
+});
+
 chrome.runtime.onInstalled.addListener(() => {
 	log('runtime.onInstlled');
-	registerInitializer();
+	handleInitialize();
 });
 
 chrome.runtime.onStartup.addListener(() => {
 	log('runtime.onStartup');
-	registerInitializer();
-});
-
-chrome.alarms.onAlarm.addListener(alarm => {
-	log(`alarms.onAlarm: ${alarm.name}`);
-	switch (alarm.name) {
-	case 'initializer':
-		loadVars()
-			.then(() => startConnect())
-			.catch(err => {
-				log(`onAlarm(initializer): ${err.stack}`);
-			});
-		break;
-	}
+	handleInitialize();
 });
 
 chrome.tabs.onRemoved.addListener(tabId => {
@@ -350,25 +386,27 @@ chrome.tabs.onRemoved.addListener(tabId => {
 chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 	switch (message.type) {
 	case 'queryInternals':
-		if (typeof sender.tab?.id === 'number') {
-			tabIds.add(sender.tab.id);
-			log(`got queryInternals, ${sender.tab.id}#${sender.frameId} ${message.name} (${sender.tab.url.substring(0, 32)}...)`);
-		}
-		loadVars()
+		initApplication()
 			.then(() => {
 				sendResponse({
 					settings,
-					connected: websocket?.readyState === 1
+					connected: isConnected()
 				});
 			})
 			.catch(err => {
-				log(`onMessage(${message.type}): ${err.stack}`);
+				log(`onMessage(${message.type}): ${getErrorDescription(err)}`);
+				sendResonse({
+					error: {
+						message: err.message,
+						stack: err.stack
+					}
+				});
 			});
-		break;
+		return true;
 
 	case 'updateSettings':
 	case 'resetSettings':
-		loadVars()
+		initApplication()
 			.then(() => handleUpdateSettings(
 				message.type === 'updateSettings' ?
 					message.settings :
@@ -376,13 +414,19 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 			.then(() => {
 				sendResponse({
 					settings,
-					connected: websocket?.readyState === 1
+					connected: isConnected()
 				});
 			})
 			.catch(err => {
-				log(`onMessage(${message.type}): ${err.stack}`);
+				log(`onMessage(${message.type}): ${getErrorDescription(err)}`);
+				sendResonse({
+					error: {
+						message: err.message,
+						stack: err.stack
+					}
+				});
 			});
-		break;
+		return true;
 
 	case 'notifyPlayAudio':
 		lastAudioPlayedTime = Date.now();
@@ -390,17 +434,22 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
 
 	case 'notifyFocusIn':
 		if (sender.tab) {
-			focusedFrame.tabId = sender.tab.id;
-			focusedFrame.frameId = sender.frameId;
-			//log(`got focusin, ${focusedFrame.tabId}#${focusedFrame.frameId} ${message.name} (${sender.tab.url.substring(0, 32)}...)`);
+			log(`got focusin, ${sender.tab.id}#${sender.frameId} ${message.name} (${sender.tab.url.substring(0, 32)}...)`);
+			initApplication();
+			if (typeof sender.tab.id === 'number') {
+				tabIds.add(sender.tab.id);
+			}
 		}
+		break;
+
+	case 'disconnect':
+		websocket?.close();
 		break;
 
 	case 'log':
 		log(message.log);
 		break;
 	}
-	return true;
 });
 
 log('*** Input Method Observer background service worker started ***');
