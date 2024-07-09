@@ -196,7 +196,7 @@ let lastIMData;
  */
 
 function sendNotifyMessage (message) {
-	chrome.runtime.sendMessage(message).then(() => {})
+	chrome.runtime.sendMessage(message).catch(() => {})
 }
 
 function log (content, sendToBackground) {
@@ -313,6 +313,18 @@ function setTargetStyle (target, isActive) {
 	}
 }
 
+function getBoundingClientRectEx (target) {
+	try {
+		if (target.shadowRoot) {
+			return target.shadowRoot.activeElement.getBoundingClientRect();
+		}
+	}
+	catch {
+		;
+	}
+	return target.getBoundingClientRect();
+}
+
 async function locatePopup (target, popup) {
 	if (!popup) return;
 
@@ -323,7 +335,7 @@ async function locatePopup (target, popup) {
 	}
 
 	const LOOP_SENTINEL_COUNT = 10;
-	const rect = target.getBoundingClientRect();
+	const rect = getBoundingClientRectEx(target);
 	let lastLeft = rect.left + window.scrollX;
 	let lastTop = rect.top + window.scrollY;
 
@@ -331,7 +343,7 @@ async function locatePopup (target, popup) {
 		await delay(1000 * 0.1);
 
 		const targetStyle = window.getComputedStyle(target);
-		const rect = target.getBoundingClientRect();
+		const rect = getBoundingClientRectEx(target);
 		const targetLeft = rect.left + window.scrollX;
 		const targetTop = rect.top + window.scrollY;
 		//log(`locatePopup: target: ${rect.left} x ${rect.top}, ${getTargetElementHTML(target)}`);
